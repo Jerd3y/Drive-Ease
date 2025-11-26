@@ -94,28 +94,24 @@ export function LoginForm({
       }
 
       toast.success("Successfully signed in!")
-      
+
       const searchParams = new URLSearchParams(window.location.search)
       const redirectTo = searchParams.get("redirect")
-      
+
       let userRole: string | undefined
-      
+
       if (result.data?.user) {
         userRole = (result.data.user as { role?: string })?.role
       }
-      
+
       if (!userRole) {
-        await new Promise(resolve => setTimeout(resolve, 300))
         const session = await authClient.getSession()
         userRole = (session?.data?.user as { role?: string })?.role
       }
-      
+
       // Force a refresh to update the session before redirecting
       router.refresh()
-      
-      // Small delay to ensure session is saved
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
+
       if (redirectTo) {
         if (redirectTo.startsWith("/dashboard") && userRole !== "admin") {
           router.push("/")
@@ -127,13 +123,9 @@ export function LoginForm({
       } else {
         router.push("/")
       }
-      
-      // Refresh again after navigation to ensure UI updates
-      setTimeout(() => {
-        router.refresh()
-        // Dispatch custom event to notify other components (like header) of auth change
-        window.dispatchEvent(new Event('custom:auth-changed'))
-      }, 200)
+
+      // Dispatch custom event to notify other components (like header) of auth change
+      window.dispatchEvent(new Event('custom:auth-changed'))
     } catch (error) {
       form.setError("root", {
         type: "server",

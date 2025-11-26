@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { carSchema, CarProps } from "@/types";
 import CarCard from "@/components/shared/car-card";
@@ -27,10 +28,17 @@ export default async function CarDetailsPage({
 }: {
   params: { id: string };
 }) {
-  // @ts-expect-error - Prisma Accelerate extension causes type conflicts
-  const car = await prisma.car.findUnique({
-    where: { id: params.id },
-  });
+  const getCachedCar = unstable_cache(
+    async (id: string) => {
+      return await prisma.car.findUnique({
+        where: { id },
+      });
+    },
+    ["car-details"],
+    { revalidate: 60, tags: ["car"] }
+  );
+
+  const car = await getCachedCar(params.id);
 
   if (!car) {
     notFound();
@@ -114,10 +122,10 @@ export default async function CarDetailsPage({
 
   const user = await requireAuth().catch(() => null);
 
-  const allImages = [
-    generateCarImageUrl(carData),
-    ...(carData.images && carData.images.length > 0 ? carData.images : [])
-  ].slice(0, 6);
+  const allImages =
+    carData.images && carData.images.length > 0
+      ? carData.images
+      : [generateCarImageUrl(carData)];
 
   return (
     <div className="min-h-screen bg-background">
@@ -141,7 +149,7 @@ export default async function CarDetailsPage({
                         src={img}
                         alt={`${car.make} ${car.model} - Image ${idx + 1}`}
                         fill
-                        className="object-cover"
+                        className="object-contain"
                         priority={idx === 0}
                       />
                     </div>
@@ -186,9 +194,9 @@ export default async function CarDetailsPage({
                   <Badge variant="destructive">Unavailable</Badge>
                 )}
               </div>
-              
+
               <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-4xl font-bold">₱{car.pricePerDay.toFixed(2)}</span>
+                <span className="text-4xl font-bold">₱{car.pricePerDay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 <span className="text-lg text-muted-foreground">/day</span>
               </div>
             </div>
@@ -252,7 +260,7 @@ export default async function CarDetailsPage({
                       <p className="text-xl font-bold">{car.cityMpg}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50">
                     <div className="p-2 rounded-md bg-background">
                       <Gauge className="h-5 w-5 text-primary" />
@@ -351,8 +359,8 @@ export default async function CarDetailsPage({
                   </p>
                 ) : (
                   <p className="text-muted-foreground">
-                    Experience the perfect blend of performance and comfort with the {car.make} {car.model}. 
-                    This {car.year} model offers exceptional fuel efficiency and a smooth driving experience, 
+                    Experience the perfect blend of performance and comfort with the {car.make} {car.model}.
+                    This {car.year} model offers exceptional fuel efficiency and a smooth driving experience,
                     making it ideal for your next adventure.
                   </p>
                 )}
