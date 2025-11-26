@@ -122,6 +122,104 @@ function DragHandle({ id }: { id: string }) {
   );
 }
 
+function DraggableRow({ row }: { row: Row<Booking> }) {
+  const { transform, transition, setNodeRef, isDragging } = useSortable({
+    id: row.original.id,
+  });
+
+  return (
+    <TableRow
+      data-state={row.getIsSelected() && "selected"}
+      data-dragging={isDragging}
+      ref={setNodeRef}
+      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition: transition,
+      }}
+    >
+      {row.getVisibleCells().map((cell) => (
+        <TableCell key={cell.id}>
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
+  );
+}
+
+function DraggableBookingList({
+  table,
+  dataIds,
+  setBookings,
+  columns,
+}: {
+  table: any;
+  dataIds: UniqueIdentifier[];
+  setBookings: React.Dispatch<React.SetStateAction<Booking[]>>;
+  columns: ColumnDef<Booking>[];
+}) {
+  const sortableId = React.useId();
+  const sensors = useSensors(
+    useSensor(MouseSensor, {}),
+    useSensor(TouchSensor, {}),
+    useSensor(KeyboardSensor, {})
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (active && over && active.id !== over.id) {
+      setBookings((bookings) => {
+        const oldIndex = dataIds.indexOf(active.id);
+        const newIndex = dataIds.indexOf(over.id);
+        return arrayMove(bookings, oldIndex, newIndex);
+      });
+    }
+  }
+
+  return (
+    <DndContext
+      collisionDetection={closestCenter}
+      modifiers={[restrictToVerticalAxis]}
+      onDragEnd={handleDragEnd}
+      sensors={sensors}
+      id={sortableId}
+    >
+      <Table>
+        <TableHeader className="bg-muted sticky top-0 z-10">
+          {table.getHeaderGroups().map((headerGroup: any) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header: any) => {
+                return (
+                  <TableHead key={header.id} colSpan={header.colSpan}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody className="**:data-[slot=table-cell]:first:w-8">
+          {table.getRowModel().rows?.length ? (
+            <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
+              {table.getRowModel().rows.map((row: any) => (
+                <DraggableRow key={row.id} row={row} />
+              ))}
+            </SortableContext>
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No bookings found.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </DndContext>
+  );
+}
+
 export function BookingsTable({ bookings: initialBookings }: BookingsTableProps) {
   const router = useRouter();
   const [bookings, setBookings] = React.useState(initialBookings);
@@ -135,13 +233,6 @@ export function BookingsTable({ bookings: initialBookings }: BookingsTableProps)
   });
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [searchQuery, setSearchQuery] = React.useState("");
-
-  const sortableId = React.useId();
-  const sensors = useSensors(
-    useSensor(MouseSensor, {}),
-    useSensor(TouchSensor, {}),
-    useSensor(KeyboardSensor, {})
-  );
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => bookings?.map((booking) => booking.id) || [],
@@ -382,42 +473,6 @@ export function BookingsTable({ bookings: initialBookings }: BookingsTableProps)
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (active && over && active.id !== over.id) {
-      setBookings((bookings) => {
-        const oldIndex = dataIds.indexOf(active.id);
-        const newIndex = dataIds.indexOf(over.id);
-        return arrayMove(bookings, oldIndex, newIndex);
-      });
-    }
-  }
-
-  function DraggableRow({ row }: { row: Row<Booking> }) {
-    const { transform, transition, setNodeRef, isDragging } = useSortable({
-      id: row.original.id,
-    });
-
-    return (
-      <TableRow
-        data-state={row.getIsSelected() && "selected"}
-        data-dragging={isDragging}
-        ref={setNodeRef}
-        className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-        style={{
-          transform: CSS.Transform.toString(transform),
-          transition: transition,
-        }}
-      >
-        {row.getVisibleCells().map((cell) => (
-          <TableCell key={cell.id}>
-            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-          </TableCell>
-        ))}
-      </TableRow>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
@@ -474,46 +529,12 @@ export function BookingsTable({ bookings: initialBookings }: BookingsTableProps)
       </div>
 
       <div className="rounded-md border">
-        <DndContext
-          collisionDetection={closestCenter}
-          modifiers={[restrictToVerticalAxis]}
-          onDragEnd={handleDragEnd}
-          sensors={sensors}
-          id={sortableId}
-        >
-          <Table>
-            <TableHeader className="bg-muted sticky top-0 z-10">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id} colSpan={header.colSpan}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody className="**:data-[slot=table-cell]:first:w-8">
-              {table.getRowModel().rows?.length ? (
-                <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
-                  {table.getRowModel().rows.map((row) => (
-                    <DraggableRow key={row.id} row={row} />
-                  ))}
-                </SortableContext>
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No bookings found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </DndContext>
+        <DraggableBookingList
+          table={table}
+          dataIds={dataIds}
+          setBookings={setBookings}
+          columns={columns}
+        />
       </div>
 
       <div className="flex items-center justify-between px-4">

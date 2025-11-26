@@ -23,6 +23,7 @@ import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { Eye, EyeOff } from "lucide-react"
+import Image from "next/image"
 
 const loginSchema = z.object({
   email: z
@@ -237,10 +238,12 @@ export function LoginForm({
             </form>
           </Form>
           <div className="bg-muted relative hidden md:block">
-            <img
+            <Image
               src="/car-2.avif"
               alt="Image"
+              fill
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              priority
             />
           </div>
         </CardContent>

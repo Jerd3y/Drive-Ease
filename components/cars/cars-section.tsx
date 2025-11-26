@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 import { generateCarImageUrl } from "@/lib/utils";
 import { CarsGrid } from "./cars-grid";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { carSchema } from "@/types";
 
 interface CarsSectionProps {
@@ -56,12 +56,12 @@ export async function getCars(
         const getCachedCars = unstable_cache(
             async (take: number, where: Prisma.CarWhereInput) => {
                 return await Promise.all([
-                    prisma.car.findMany({
+                    (prisma as unknown as PrismaClient).car.findMany({
                         take,
                         where,
                         orderBy: { createdAt: "desc" },
                     }),
-                    prisma.car.count({ where }),
+                    (prisma as unknown as PrismaClient).car.count({ where }),
                 ]);
             },
             ["cars-list"],
