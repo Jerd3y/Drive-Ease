@@ -62,7 +62,7 @@ const CarCard = ({ car }: CarCardProps) => {
             <span className="text-sm font-semibold text-muted-foreground">
               ₱
             </span>
-            <span className="text-3xl font-extrabold">{carRent.toFixed(0)}</span>
+            <span className="text-3xl font-extrabold">{carRent.toLocaleString()}</span>
             <span className="text-sm font-medium text-muted-foreground">
               /day
             </span>
@@ -70,7 +70,7 @@ const CarCard = ({ car }: CarCardProps) => {
 
           <div className="relative w-full h-40 rounded-lg overflow-hidden bg-muted">
             <CarImage
-              src={generateCarImageUrl(car)}
+              src={car.images && car.images[0] ? car.images[0] : generateCarImageUrl(car)}
               alt={`${make} ${model}`}
               fill
               priority

@@ -23,6 +23,7 @@ import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { Eye, EyeOff } from "lucide-react"
+import Image from "next/image"
 
 const signupSchema = z
   .object({
@@ -47,14 +48,14 @@ const signupSchema = z
       .min(8, { message: "Password must be at least 8 characters long" })
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        { message: "Password must contain at least one uppercase letter, one lowercase letter, and one number" }    
+        { message: "Password must contain at least one uppercase letter, one lowercase letter, and one number" }
       ),
     confirmPassword: z
       .string({ message: "Please confirm your password" })
       .min(1, { message: "Please confirm your password" })
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        { message: "Password must contain at least one uppercase letter, one lowercase letter, and one number" }    
+        { message: "Password must contain at least one uppercase letter, one lowercase letter, and one number" }
       ),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -141,7 +142,7 @@ export function SignupForm({
       }
 
       toast.success("Account created successfully!")
-      
+
       // Redirect to login page after successful signup
       router.push("/login")
       router.refresh()
@@ -309,10 +310,12 @@ export function SignupForm({
             </form>
           </Form>
           <div className="bg-muted relative hidden md:block">
-            <img
+            <Image
               src="/car.jpg"
               alt="Image"
+              fill
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              priority
             />
           </div>
         </CardContent>

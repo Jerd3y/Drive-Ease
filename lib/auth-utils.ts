@@ -17,19 +17,7 @@ export async function getCurrentUser() {
       return null;
     }
 
-    const userId = session.user.id as string;
-    const user = await basePrisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        image: true,
-      },
-    });
-
-    return user;
+    return session.user;
   } catch (error) {
     console.error("Error getting current user:", error);
     return null;

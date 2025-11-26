@@ -10,11 +10,35 @@ import { ArrowLeft, CarFront } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
+import { PrismaClient } from "@prisma/client";
+
+const basePrisma = prisma as unknown as PrismaClient;
+
 async function getCarsByClass(classFilter?: string) {
   try {
-    const cars = await prisma.car.findMany({
+    const cars = await basePrisma.car.findMany({
       where: classFilter ? { class: classFilter, available: true } : { available: true },
       orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        cityMpg: true,
+        class: true,
+        combinationMpg: true,
+        cylinders: true,
+        displacement: true,
+        drive: true,
+        fuelType: true,
+        highwayMpg: true,
+        make: true,
+        model: true,
+        transmission: true,
+        year: true,
+        pricePerDay: true,
+        available: true,
+        description: true,
+        images: true,
+        location: true,
+      },
     });
 
     return cars.map((car) =>
@@ -47,7 +71,7 @@ async function getCarsByClass(classFilter?: string) {
 
 async function getCarClasses() {
   try {
-    const classes = await prisma.car.findMany({
+    const classes = await basePrisma.car.findMany({
       where: { available: true },
       select: { class: true },
       distinct: ["class"],
@@ -72,7 +96,7 @@ export default async function CarsPage() {
   const [allCars, carClasses, carsForFilters] = await Promise.all([
     getCarsByClass(),
     getCarClasses(),
-    prisma.car.findMany({
+    basePrisma.car.findMany({
       where: { available: true },
       select: {
         make: true,
@@ -90,7 +114,17 @@ export default async function CarsPage() {
   ]);
 
   // Transform cars for filters component
-  const filterCars = carsForFilters.map((car) => ({
+  const filterCars = carsForFilters.map((car: {
+    make: string;
+    class: string;
+    fuelType: string;
+    drive: string;
+    transmission: string;
+    year: number;
+    cityMpg: number;
+    highwayMpg: number;
+    combinationMpg: number;
+  }) => ({
     make: car.make,
     class: car.class,
     fuel_type: car.fuelType,

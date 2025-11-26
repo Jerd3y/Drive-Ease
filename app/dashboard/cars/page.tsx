@@ -8,7 +8,9 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { CarsAdminTable } from "@/components/dashboard/cars-admin-table";
-import { AddCarDialog } from "@/components/dashboard/add-car-dialog";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { IconPlus } from "@tabler/icons-react";
 
 const basePrisma = prisma as unknown as PrismaClient;
 
@@ -22,7 +24,7 @@ export default async function CarsAdminPage() {
   // Transform cars to match the CarsAdminTable component's expected format
   const cars = carsData.map((car) => {
     let images: string | string[] | null = null;
-    
+
     if (car.images) {
       if (Array.isArray(car.images)) {
         images = car.images.filter((img): img is string => typeof img === "string");
@@ -70,7 +72,12 @@ export default async function CarsAdminPage() {
                     Manage your car inventory
                   </p>
                 </div>
-                <AddCarDialog />
+                <Link href="/dashboard/cars/new">
+                  <Button>
+                    <IconPlus className="mr-2 size-4" />
+                    Add Car
+                  </Button>
+                </Link>
               </div>
               <div className="px-4 lg:px-6">
                 <CarsAdminTable cars={cars} />

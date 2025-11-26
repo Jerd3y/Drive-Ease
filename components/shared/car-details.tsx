@@ -71,7 +71,7 @@ const CarDetails = ({ isOpen, closeModal, car }: CarDetailsProps) => {
             <span className="text-sm font-semibold text-muted-foreground">
               ₱
             </span>
-            <span className="text-4xl font-extrabold">{carRent}</span>
+            <span className="text-4xl font-extrabold">{carRent.toLocaleString()}</span>
             <span className="text-sm font-medium text-muted-foreground">
               /day
             </span>
@@ -79,7 +79,7 @@ const CarDetails = ({ isOpen, closeModal, car }: CarDetailsProps) => {
 
           <div className="relative w-full h-64 rounded-lg overflow-hidden bg-muted">
             <CarImage
-              src={generateCarImageUrl(car)}
+              src={car.images && car.images[0] ? car.images[0] : generateCarImageUrl(car)}
               alt={`${car.make} ${car.model}`}
               fill
               priority
@@ -90,24 +90,24 @@ const CarDetails = ({ isOpen, closeModal, car }: CarDetailsProps) => {
           <div className="grid grid-cols-3 gap-3">
             <div className="relative w-full h-20 rounded-lg overflow-hidden bg-muted">
               <CarImage
-                src={generateCarImageUrl(car, "29")}
-                alt={`${car.make} ${car.model} angle 29`}
+                src={car.images && car.images[1] ? car.images[1] : generateCarImageUrl(car, "29")}
+                alt={`${car.make} ${car.model} view 2`}
                 fill
                 className="object-contain"
               />
             </div>
             <div className="relative w-full h-20 rounded-lg overflow-hidden bg-muted">
               <CarImage
-                src={generateCarImageUrl(car, "33")}
-                alt={`${car.make} ${car.model} angle 33`}
+                src={car.images && car.images[2] ? car.images[2] : generateCarImageUrl(car, "33")}
+                alt={`${car.make} ${car.model} view 3`}
                 fill
                 className="object-contain"
               />
             </div>
             <div className="relative w-full h-20 rounded-lg overflow-hidden bg-muted">
               <CarImage
-                src={generateCarImageUrl(car, "13")}
-                alt={`${car.make} ${car.model} angle 13`}
+                src={car.images && car.images[3] ? car.images[3] : generateCarImageUrl(car, "13")}
+                alt={`${car.make} ${car.model} view 4`}
                 fill
                 className="object-contain"
               />

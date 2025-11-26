@@ -47,8 +47,8 @@ export default function HeroSection() {
                                     <div className="mt-6 grid max-w-sm grid-cols-3 gap-6">
                                         <div className="flex items-center justify-center">
                                             <div className="text-muted-foreground text-sm font-medium flex items-center gap-1">
-                                                        <IconStar className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                                                        4.8 Rating
+                                                <IconStar className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                                                4.8 Rating
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-center">
@@ -74,6 +74,7 @@ export default function HeroSection() {
                                         width="1200"
                                         height="800"
                                         className="object-center size-full object-cover"
+                                        priority
                                     />
                                 </div>
                             </div>

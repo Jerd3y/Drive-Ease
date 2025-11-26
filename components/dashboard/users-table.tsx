@@ -132,12 +132,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
   const [roleFilter, setRoleFilter] = React.useState<string>("all");
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  const sortableId = React.useId();
-  const sensors = useSensors(
-    useSensor(MouseSensor, {}),
-    useSensor(TouchSensor, {}),
-    useSensor(KeyboardSensor, {})
-  );
+
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => users?.map((user) => user.id) || [],
@@ -375,15 +370,77 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (active && over && active.id !== over.id) {
-      setUsers((users) => {
-        const oldIndex = dataIds.indexOf(active.id);
-        const newIndex = dataIds.indexOf(over.id);
-        return arrayMove(users, oldIndex, newIndex);
-      });
+  function DraggableUserList({
+    table,
+    dataIds,
+    setUsers,
+    columns,
+  }: {
+    table: any;
+    dataIds: UniqueIdentifier[];
+    setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+    columns: ColumnDef<User>[];
+  }) {
+    const sortableId = React.useId();
+    const sensors = useSensors(
+      useSensor(MouseSensor, {}),
+      useSensor(TouchSensor, {}),
+      useSensor(KeyboardSensor, {})
+    );
+
+    function handleDragEnd(event: DragEndEvent) {
+      const { active, over } = event;
+      if (active && over && active.id !== over.id) {
+        setUsers((users) => {
+          const oldIndex = dataIds.indexOf(active.id);
+          const newIndex = dataIds.indexOf(over.id);
+          return arrayMove(users, oldIndex, newIndex);
+        });
+      }
     }
+
+    return (
+      <DndContext
+        collisionDetection={closestCenter}
+        modifiers={[restrictToVerticalAxis]}
+        onDragEnd={handleDragEnd}
+        sensors={sensors}
+        id={sortableId}
+      >
+        <Table>
+          <TableHeader className="bg-muted sticky top-0 z-10">
+            {table.getHeaderGroups().map((headerGroup: any) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header: any) => {
+                  return (
+                    <TableHead key={header.id} colSpan={header.colSpan}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody className="**:data-[slot=table-cell]:first:w-8">
+            {table.getRowModel().rows?.length ? (
+              <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
+                {table.getRowModel().rows.map((row: any) => (
+                  <DraggableRow key={row.id} row={row} />
+                ))}
+              </SortableContext>
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No users found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </DndContext>
+    );
   }
 
   function DraggableRow({ row }: { row: Row<User> }) {
@@ -465,46 +522,12 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
       </div>
 
       <div className="rounded-md border">
-        <DndContext
-          collisionDetection={closestCenter}
-          modifiers={[restrictToVerticalAxis]}
-          onDragEnd={handleDragEnd}
-          sensors={sensors}
-          id={sortableId}
-        >
-          <Table>
-            <TableHeader className="bg-muted sticky top-0 z-10">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id} colSpan={header.colSpan}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody className="**:data-[slot=table-cell]:first:w-8">
-              {table.getRowModel().rows?.length ? (
-                <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
-                  {table.getRowModel().rows.map((row) => (
-                    <DraggableRow key={row.id} row={row} />
-                  ))}
-                </SortableContext>
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No users found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </DndContext>
+        <DraggableUserList
+          table={table}
+          dataIds={dataIds}
+          setUsers={setUsers}
+          columns={columns}
+        />
       </div>
 
       <div className="flex items-center justify-between px-4">
