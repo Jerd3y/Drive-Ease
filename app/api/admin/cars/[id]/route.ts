@@ -18,7 +18,6 @@ export async function PATCH(
     
 
     // Check if car exists first
-    // @ts-expect-error - Prisma Accelerate extension causes type conflicts
     const existingCar = await prisma.car.findUnique({
       where: { id },
     });
