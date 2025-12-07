@@ -18,6 +18,8 @@ export async function PATCH(
     
 
     // Check if car exists first
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - Prisma Accelerate extension causes type conflicts
     const existingCar = await prisma.car.findUnique({
       where: { id },
     });
