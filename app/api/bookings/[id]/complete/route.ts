@@ -15,16 +15,18 @@ const completeBookingSchema = z.object({
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAuth();
+    const { id } = await params;
     const body = await request.json();
     const data = completeBookingSchema.parse(body);
 
     // Verify booking belongs to user
+    // @ts-expect-error - Prisma Accelerate extension causes type conflicts
     const booking = await prisma.booking.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!booking) {
@@ -43,7 +45,7 @@ export async function POST(
 
     // Store additional information in proper schema fields
     const updatedBooking = await prisma.booking.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         phoneNumber: data.phoneNumber,
         driversLicense: data.driversLicenseNumber,
@@ -66,7 +68,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request data", details: error.errors },
+        { error: "Invalid request data", details: error.issues },
         { status: 400 }
       );
     }

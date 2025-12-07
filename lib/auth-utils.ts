@@ -1,10 +1,6 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { PrismaClient } from "@prisma/client";
-
-const basePrisma = prisma as unknown as PrismaClient;
 
 export async function getCurrentUser() {
   try {
@@ -44,4 +40,3 @@ export async function isAdmin() {
   const user = await getCurrentUser();
   return user?.role === "admin";
 }
-

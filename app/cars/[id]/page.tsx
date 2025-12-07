@@ -30,6 +30,7 @@ export default async function CarDetailsPage({
 }) {
   const getCachedCar = unstable_cache(
     async (id: string) => {
+      // @ts-expect-error - Prisma Accelerate extension causes type conflicts
       return await prisma.car.findUnique({
         where: { id },
       });

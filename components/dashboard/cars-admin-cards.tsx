@@ -3,21 +3,18 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Gauge, Fuel, Settings, ChevronRight } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
 import {
-  IconCurrencyPeso,
   IconDotsVertical,
   IconEye,
   IconEdit,
-  IconPhoto,
   IconToggleLeft,
   IconToggleRight,
   IconTrash,
 } from "@tabler/icons-react"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
-
-import { Button } from "@/components/ui/button"
+import { Gauge, Fuel, Settings, ChevronRight } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -127,7 +124,8 @@ export function CarsAdminCards({ cars }: CarsAdminCardsProps) {
       make: car.make,
       model: car.model,
       year: car.year,
-    })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
   }
 
   if (cars.length === 0) {

@@ -1,19 +1,19 @@
 'use client'
 import Link from 'next/link'
 import { Logo } from '@/components/layout/logo'
-import { Menu, X, Search, Calendar, User, LogOut, Settings } from 'lucide-react'
+import { Menu, X, Calendar, LogOut, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import React from 'react'
 import { useScroll, motion } from 'motion/react'
 import { cn } from '@/lib/utils'
-import { CarSearch } from '@/components/cars/car-search'
+
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { authClient } from '@/lib/auth-client'
@@ -28,7 +28,7 @@ export const HeroHeader = () => {
     const [menuState, setMenuState] = React.useState(false)
     const [scrolled, setScrolled] = React.useState(false)
     const [user, setUser] = React.useState<{ id: string; name: string | null; email: string; image: string | null; role: string } | null>(null)
-    const [showSearch, setShowSearch] = React.useState(false)
+
     const { scrollYProgress } = useScroll()
     const router = useRouter()
     const pathname = usePathname()
@@ -44,11 +44,15 @@ export const HeroHeader = () => {
         try {
             const session = await authClient.getSession()
             if (session?.data?.user) {
-                setUser(session.data.user)
+                setUser({
+                    ...session.data.user,
+                    image: session.data.user.image ?? null,
+                    role: (session.data.user as { role?: string }).role || 'user'
+                })
             } else {
                 setUser(null)
             }
-        } catch (error) {
+        } catch {
             setUser(null)
         }
     }, [])
@@ -63,15 +67,15 @@ export const HeroHeader = () => {
         const handleFocus = () => {
             fetchUser()
         }
-        
+
         const handleStorage = () => {
             fetchUser()
         }
-        
+
         window.addEventListener('focus', handleFocus)
         window.addEventListener('storage', handleStorage)
         window.addEventListener('custom:auth-changed', handleStorage)
-        
+
         return () => {
             window.removeEventListener('focus', handleFocus)
             window.removeEventListener('storage', handleStorage)
@@ -142,7 +146,7 @@ export const HeroHeader = () => {
                                             </Link>
                                         </li>
                                     ))}
-                                </ul> 
+                                </ul>
                             </div>
                             {user ? (
                                 <div className="flex items-center gap-4">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
+import { z } from "zod"
 import {
   Dialog,
   DialogContent,
@@ -37,24 +38,8 @@ import { createCarSchema } from "@/lib/schemas/admin"
 import { IconPlus, IconPhoto, IconX } from "@tabler/icons-react"
 import Image from "next/image"
 
-type CreateCarFormData = {
-  make: string
-  model: string
-  year: number
-  class: string
-  fuelType: string
-  cityMpg: number
-  highwayMpg: number
-  combinationMpg: number
-  cylinders: number
-  displacement: number
-  drive: string
-  transmission: string
-  pricePerDay: number
-  available: boolean
-  description?: string | null
-  location?: string | null
-}
+// Use z.input to get the input type (before defaults are applied)
+type CreateCarFormData = z.input<typeof createCarSchema>
 
 interface AddCarDialogProps {
   children?: React.ReactNode

@@ -4,7 +4,7 @@ import { useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CarProps } from "@/types";
 import CarCard from "@/components/shared/car-card";
-import { Empty } from "@/components/ui/empty";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -20,12 +20,20 @@ import { useCars } from "@/hooks/use-cars";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { APP_CONFIG, SORT_OPTIONS } from "@/constants/config";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface CarsGridProps {
   initialCars: CarProps[];
   total?: number;
   showFilters?: boolean;
   showSearch?: boolean;
+  layout?: "grid" | "carousel";
 }
 
 export function CarsGrid({
@@ -33,10 +41,11 @@ export function CarsGrid({
   total,
   showFilters = false,
   showSearch = false,
+  layout = "grid",
 }: CarsGridProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Use optimized custom hook for data fetching
   const { cars, total: totalCount, isLoading, error, refetch } = useCars({
     initialCars,
@@ -55,23 +64,23 @@ export function CarsGrid({
     }
 
     const params = new URLSearchParams(searchParams.toString());
-    
+
     // Split on the last underscore to handle fields with underscores (e.g., "created_at_desc")
     const lastUnderscoreIndex = value.lastIndexOf("_");
     if (lastUnderscoreIndex === -1) {
       console.error("Invalid sort value format:", value);
       return;
     }
-    
+
     const newSortBy = value.substring(0, lastUnderscoreIndex);
     const newSortOrder = value.substring(lastUnderscoreIndex + 1);
-    
+
     // Validate sort order
     if (newSortOrder !== "asc" && newSortOrder !== "desc") {
       console.error("Invalid sort order:", newSortOrder);
       return;
     }
-    
+
     // Only update if values actually changed
     if (newSortBy === sortBy && newSortOrder === sortOrder) {
       return;
@@ -80,7 +89,7 @@ export function CarsGrid({
     params.set("sort_by", newSortBy);
     params.set("sort_order", newSortOrder);
     params.set("offset", "0");
-    
+
     router.replace(`/?${params.toString()}`, { scroll: false });
   }, [searchParams, router, sortBy, sortOrder, currentSortValue]);
 
@@ -180,16 +189,39 @@ export function CarsGrid({
         </div>
       )}
 
-      {/* Cars Grid */}
+      {/* Cars Grid or Carousel */}
       {cars.length === 0 ? (
-        <Empty
-          title="No cars found"
-          description={
-            hasActiveFilters
-              ? "Try adjusting your filters to see more results."
-              : "We couldn't find any cars matching your criteria."
-          }
-        />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>No cars found</EmptyTitle>
+            <EmptyDescription>
+              {hasActiveFilters
+                ? "Try adjusting your filters to see more results."
+                : "We couldn't find any cars matching your criteria."}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : layout === "carousel" ? (
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-4">
+            {cars.map((car, index) => (
+              <CarouselItem
+                key={car.id || `${car.make}-${car.model}-${car.year}-${index}`}
+                className="pl-4 md:basis-1/2 lg:basis-1/3"
+              >
+                <CarCard car={car} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex" />
+          <CarouselNext className="hidden md:flex" />
+        </Carousel>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {cars.map((car, index) => (

@@ -25,18 +25,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { format, differenceInDays } from "date-fns";
-import { CalendarIcon, CalendarDays, Clock, DollarSign } from "lucide-react";
+import { CalendarIcon, CalendarDays, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
+import { IconCurrencyPeso } from "@tabler/icons-react";
 
 const bookingFormSchema = z.object({
   dateRange: z.object({
     from: z.date({
-      required_error: "Start date is required",
+      message: "Start date is required",
     }),
     to: z.date({
-      required_error: "End date is required",
+      message: "End date is required",
     }),
   }).refine((data) => data.to > data.from, {
     message: "End date must be after start date",
@@ -218,12 +219,12 @@ export function BookingForm({ carId, pricePerDay, onSuccess }: BookingFormProps)
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <DollarSign className="h-4 w-4" />
+                      <IconCurrencyPeso className="h-4 w-4" />
                       <span>Price per day</span>
                     </div>
-                    <span className="font-medium">₱{pricePerDay.toFixed(2)}</span>
+                    <span className="font-medium">₱{pricePerDay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Clock className="h-4 w-4" />
@@ -237,7 +238,7 @@ export function BookingForm({ carId, pricePerDay, onSuccess }: BookingFormProps)
                   <div className="flex items-center justify-between">
                     <span className="text-base font-semibold">Total Amount</span>
                     <span className="text-2xl font-bold text-primary">
-                      ₱{calculateTotal().toFixed(2)}
+                      ₱{calculateTotal().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
@@ -246,9 +247,9 @@ export function BookingForm({ carId, pricePerDay, onSuccess }: BookingFormProps)
           </Card>
         )}
 
-        <Button 
-          type="submit" 
-          className="w-full h-12 text-base font-semibold" 
+        <Button
+          type="submit"
+          className="w-full h-12 text-base font-semibold"
           disabled={isLoading || !isRangeComplete}
           size="lg"
         >
@@ -271,4 +272,3 @@ export function BookingForm({ carId, pricePerDay, onSuccess }: BookingFormProps)
     </Form>
   );
 }
-

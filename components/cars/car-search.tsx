@@ -1,30 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SearchIcon, X, Filter } from "lucide-react";
+import { SearchIcon, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+
 import { CarProps } from "@/types";
 
 interface CarSearchProps {
   onSearch?: (query: string) => void;
-  onResultsChange?: (results: CarProps[]) => void;
-  showFilters?: boolean;
 }
 
 export function CarSearch({
   onSearch,
-  onResultsChange,
-  showFilters = true,
 }: CarSearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,34 +24,35 @@ export function CarSearch({
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Debounce search
-  const debouncedSearch = useCallback(
-    debounce(async (query: string) => {
-      if (!query.trim()) {
-        setSuggestions([]);
-        setIsSearching(false);
-        return;
-      }
+  // Debounced search function - using useMemo to create stable debounced function
+  const debouncedSearch = React.useMemo(
+    () =>
+      debounce(async (query: string) => {
+        if (!query.trim()) {
+          setSuggestions([]);
+          setIsSearching(false);
+          return;
+        }
 
-      setIsSearching(true);
-      try {
-        const response = await fetch(
-          `/api/cars?q=${encodeURIComponent(query)}&limit=5`
-        );
-        const data = await response.json();
-        const uniqueMakes = Array.from(
-          new Set(data.cars.map((car: CarProps) => car.make))
-        );
-        const uniqueModels = Array.from(
-          new Set(data.cars.map((car: CarProps) => car.model))
-        );
-        setSuggestions([...uniqueMakes, ...uniqueModels].slice(0, 8));
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 300),
+        setIsSearching(true);
+        try {
+          const response = await fetch(
+            `/api/cars?q=${encodeURIComponent(query)}&limit=5`
+          );
+          const data = await response.json();
+          const uniqueMakes: string[] = Array.from(
+            new Set(data.cars.map((car: CarProps) => car.make))
+          );
+          const uniqueModels: string[] = Array.from(
+            new Set(data.cars.map((car: CarProps) => car.model))
+          );
+          setSuggestions([...uniqueMakes, ...uniqueModels].slice(0, 8));
+        } catch (error) {
+          console.error("Error fetching suggestions:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 300),
     []
   );
 
@@ -157,7 +147,8 @@ export function CarSearch({
 }
 
 // Debounce utility function
-function debounce<T extends (...args: unknown[]) => unknown>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {

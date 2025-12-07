@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { withAccelerate } from "@prisma/extension-accelerate";
 
 const globalForPrisma = globalThis as unknown as {
@@ -63,7 +63,7 @@ function createBasePrismaClient() {
 
   const clientConfig: {
     datasources?: { db: { url: string } };
-    log: string[];
+    log: Prisma.LogLevel[];
   } = {
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   };

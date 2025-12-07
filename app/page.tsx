@@ -3,6 +3,8 @@ import Features from "@/components/layout/features"
 import { CarsSection } from "@/components/cars/cars-section"
 import FooterSection from "@/components/layout/footer"
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home({
   searchParams,
 }: {
@@ -18,6 +20,7 @@ export default async function Home({
         showFilters={true}
         showSearch={true}
         searchParams={searchParams}
+        layout="carousel"
       />
       <Features />
       <FooterSection />

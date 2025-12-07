@@ -115,12 +115,8 @@ export function EditCarDialog({ car, open, onOpenChange }: EditCarDialogProps) {
     resolver: zodResolver(updateCarSchema),
     defaultValues: React.useMemo(() => {
       if (!car) return {}
-      
-      const carImages = Array.isArray(car.images)
-        ? car.images
-        : typeof car.images === "string"
-        ? [car.images]
-        : []
+
+      if (!car) return {}
 
       return {
         make: car.make,
@@ -148,9 +144,9 @@ export function EditCarDialog({ car, open, onOpenChange }: EditCarDialogProps) {
       const carImages = Array.isArray(car.images)
         ? car.images.filter((img): img is string => typeof img === "string")
         : typeof car.images === "string"
-        ? [car.images]
-        : []
-      
+          ? [car.images]
+          : []
+
       setExistingImages(carImages)
       setImages([])
       form.reset({
@@ -276,7 +272,7 @@ export function EditCarDialog({ car, open, onOpenChange }: EditCarDialogProps) {
 
         const uploadResults = await Promise.all(uploadPromises)
         const failedUploads = uploadResults.filter((r) => r.error)
-        
+
         if (failedUploads.length > 0) {
           toast.warning(
             `Car updated but ${failedUploads.length} image(s) failed to upload`

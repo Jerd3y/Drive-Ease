@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Calendar, MapPin, DollarSign, CarFront, Clock, CheckCircle2, XCircle, AlertCircle, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, CarFront, Clock, CheckCircle2, XCircle, AlertCircle, FileText } from "lucide-react";
+import { IconCurrencyPeso } from "@tabler/icons-react";
 import type { BookingStatus, Prisma } from "@prisma/client";
 import { ROUTES } from "@/constants/routes";
 import { BOOKING_STATUS_LABELS } from "@/constants/config";
@@ -12,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { format, differenceInDays, isPast, isFuture } from "date-fns";
+
+export const dynamic = 'force-dynamic'
 
 type BookingWithCar = Prisma.BookingGetPayload<{
   include: {
@@ -30,7 +33,7 @@ type BookingWithCar = Prisma.BookingGetPayload<{
 export default async function BookingsPage() {
   const user = await requireAuth();
 
-  // @ts-expect-error - Prisma Accelerate extension causes type conflicts with include/select
+  // @ts-expect-error - Prisma Accelerate extension causes type conflicts
   const bookings = (await prisma.booking.findMany({
     where: { userId: user.id },
     include: {
@@ -88,7 +91,7 @@ export default async function BookingsPage() {
   const getBookingStatus = (booking: BookingWithCar) => {
     const start = new Date(booking.startDate);
     const end = new Date(booking.endDate);
-    const now = new Date();
+
 
     if (booking.status === "cancelled") return "cancelled";
     if (booking.status === "completed") return "completed";
@@ -169,23 +172,23 @@ export default async function BookingsPage() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <DollarSign className="h-4 w-4" />
+                <IconCurrencyPeso className="h-4 w-4" />
                 <span className="text-sm">Total Amount</span>
               </div>
               <span className="text-xl font-bold text-primary">
-                ₱{booking.totalPrice.toFixed(2)}
+                ₱{booking.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button asChild variant="outline" className="flex-1">
-              <Link href={ROUTES.CAR_DETAIL(booking.car.id)}>
-                View Car Details
+            <Button asChild variant="default" className="flex-1">
+              <Link href={`/bookings/${booking.id}`}>
+                View Details
               </Link>
             </Button>
-            {bookingStatus === "upcoming" && booking.status === "confirmed" && (
-              <Button asChild variant="default" className="flex-1">
+            {bookingStatus === "upcoming" && booking.status === "pending" && (
+              <Button asChild variant="outline" className="flex-1">
                 <Link href={`/bookings/${booking.id}/complete`}>
                   Complete Booking
                 </Link>

@@ -2,8 +2,8 @@ import { CarProps } from "@/types";
 import { unstable_cache } from "next/cache";
 import { generateCarImageUrl } from "@/lib/utils";
 import { CarsGrid } from "./cars-grid";
-import { prisma } from "@/lib/prisma";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { prismaBase } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { carSchema } from "@/types";
 
 interface CarsSectionProps {
@@ -13,6 +13,7 @@ interface CarsSectionProps {
     showFilters?: boolean;
     showSearch?: boolean;
     searchParams?: { [key: string]: string | string[] | undefined };
+    layout?: "grid" | "carousel";
 }
 
 export async function getCars(
@@ -22,8 +23,10 @@ export async function getCars(
     try {
         const { manufacturer, model, fuel, year, limit: paramLimit } = searchParams || {};
 
-        // Create a where clause based on searchParams
-        const where: Prisma.CarWhereInput = {};
+        // Create a where clause based on searchParams - only show available cars
+        const where: Prisma.CarWhereInput = {
+            available: true, // Only show available cars
+        };
 
         if (manufacturer) {
             where.make = {
@@ -56,12 +59,12 @@ export async function getCars(
         const getCachedCars = unstable_cache(
             async (take: number, where: Prisma.CarWhereInput) => {
                 return await Promise.all([
-                    (prisma as unknown as PrismaClient).car.findMany({
+                    prismaBase.car.findMany({
                         take,
                         where,
                         orderBy: { createdAt: "desc" },
                     }),
-                    (prisma as unknown as PrismaClient).car.count({ where }),
+                    prismaBase.car.count({ where }),
                 ]);
             },
             ["cars-list"],
@@ -110,6 +113,7 @@ export async function CarsSection({
     showFilters = false,
     showSearch = false,
     searchParams,
+    layout = "grid",
 }: CarsSectionProps) {
     const { cars, total } = await getCars(limit, searchParams);
 
@@ -145,6 +149,7 @@ export async function CarsSection({
                     total={total}
                     showFilters={showFilters}
                     showSearch={showSearch}
+                    layout={layout}
                 />
             </div>
         </section>

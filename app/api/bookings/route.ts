@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-utils";
-import { bookingSchema } from "@/types";
 import { z } from "zod";
+import { sendBookingConfirmationEmail } from "@/lib/email";
 
 const createBookingSchema = z.object({
   carId: z.string(),
@@ -14,6 +14,7 @@ export async function GET() {
   try {
     const user = await requireAuth();
 
+    // @ts-expect-error - Prisma Accelerate extension causes type conflicts
     const bookings = await prisma.booking.findMany({
       where: { userId: user.id },
       include: {
@@ -31,7 +32,8 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    const transformedBookings = bookings.map((booking) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedBookings = bookings.map((booking: any) => ({
       id: booking.id,
       user_id: booking.userId,
       car_id: booking.carId,
@@ -75,12 +77,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check for conflicting bookings
+    // Check for conflicting bookings (only pending and confirmed bookings block new bookings)
+    // @ts-expect-error - Prisma Accelerate extension causes type conflicts
     const conflictingBooking = await prisma.booking.findFirst({
       where: {
         carId,
         status: { in: ["pending", "confirmed"] },
-        OR: [
+        AND: [
           {
             startDate: { lte: endDate },
             endDate: { gte: startDate },
@@ -90,22 +93,40 @@ export async function POST(request: Request) {
     });
 
     if (conflictingBooking) {
+      console.log("Conflicting booking found:", {
+        bookingId: conflictingBooking.id,
+        status: conflictingBooking.status,
+        startDate: conflictingBooking.startDate,
+        endDate: conflictingBooking.endDate,
+      });
       return NextResponse.json(
-        { error: "Car is not available for the selected dates" },
+        {
+          error: "Car is not available for the selected dates",
+          details: `There is an existing ${conflictingBooking.status} booking from ${conflictingBooking.startDate.toISOString().split('T')[0]} to ${conflictingBooking.endDate.toISOString().split('T')[0]}`
+        },
         { status: 400 }
       );
     }
 
-    // Get car price
+    // Get car price and check if car is available
+    // @ts-expect-error - Prisma Accelerate extension causes type conflicts
     const car = await prisma.car.findUnique({
       where: { id: carId },
-      select: { pricePerDay: true },
+      select: { pricePerDay: true, available: true, make: true, model: true },
     });
 
     if (!car) {
       return NextResponse.json(
         { error: "Car not found" },
         { status: 404 }
+      );
+    }
+
+    // Check if car is marked as available
+    if (car.available === false) {
+      return NextResponse.json(
+        { error: `${car.make} ${car.model} is currently not available for booking` },
+        { status: 400 }
       );
     }
 
@@ -149,6 +170,20 @@ export async function POST(request: Request) {
       updated_at: booking.updatedAt,
     };
 
+    // Send confirmation email (don't await - send in background)
+    sendBookingConfirmationEmail({
+      userName: user.name || 'Customer',
+      userEmail: user.email,
+      carMake: car.make,
+      carModel: car.model,
+      carYear: booking.car.year,
+      startDate: booking.startDate,
+      endDate: booking.endDate,
+      totalPrice: booking.totalPrice,
+      bookingId: booking.id,
+      status: booking.status,
+    }).catch(err => console.error('Failed to send booking email:', err));
+
     return NextResponse.json(
       { booking: transformedBooking },
       { status: 201 }
@@ -156,7 +191,8 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request data", details: error.errors },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { error: "Invalid request data", details: (error as any).errors },
         { status: 400 }
       );
     }
@@ -167,4 +203,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

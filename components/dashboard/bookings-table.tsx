@@ -31,7 +31,7 @@ import {
   IconLayoutColumns,
   IconCurrencyPeso,
   IconEye,
-  IconFileDescription,
+
   IconMail,
 } from "@tabler/icons-react";
 import {
@@ -45,6 +45,8 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   Row,
+  HeaderGroup,
+  Header,
   SortingState,
   useReactTable,
   VisibilityState,
@@ -153,7 +155,7 @@ function DraggableBookingList({
   setBookings,
   columns,
 }: {
-  table: any;
+  table: ReturnType<typeof useReactTable<Booking>>;
   dataIds: UniqueIdentifier[];
   setBookings: React.Dispatch<React.SetStateAction<Booking[]>>;
   columns: ColumnDef<Booking>[];
@@ -186,9 +188,9 @@ function DraggableBookingList({
     >
       <Table>
         <TableHeader className="bg-muted sticky top-0 z-10">
-          {table.getHeaderGroups().map((headerGroup: any) => (
+          {table.getHeaderGroups().map((headerGroup: HeaderGroup<Booking>) => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header: any) => {
+              {headerGroup.headers.map((header: Header<Booking, unknown>) => {
                 return (
                   <TableHead key={header.id} colSpan={header.colSpan}>
                     {header.isPlaceholder
@@ -203,7 +205,7 @@ function DraggableBookingList({
         <TableBody className="**:data-[slot=table-cell]:first:w-8">
           {table.getRowModel().rows?.length ? (
             <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
-              {table.getRowModel().rows.map((row: any) => (
+              {table.getRowModel().rows.map((row: Row<Booking>) => (
                 <DraggableRow key={row.id} row={row} />
               ))}
             </SortableContext>
@@ -249,10 +251,10 @@ export function BookingsTable({ bookings: initialBookings }: BookingsTableProps)
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: "Failed to update booking status" }));
-        throw new Error(errorData.error || errorData.details?.[0]?.message || "Failed to update booking status");
+        throw new Error(errorData.error || "Failed to update booking status");
       }
 
-      const data = await response.json();
+      await response.json();
       setBookings(
         bookings.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
       );
@@ -410,7 +412,7 @@ export function BookingsTable({ bookings: initialBookings }: BookingsTableProps)
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <a href={`/bookings/${booking.id}`}>
+                    <a href={`/dashboard/bookings/${booking.id}`}>
                       <IconEye className="mr-2 size-4" />
                       View Details
                     </a>
@@ -445,7 +447,8 @@ export function BookingsTable({ bookings: initialBookings }: BookingsTableProps)
         enableHiding: false,
       },
     ],
-    [bookings]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   const table = useReactTable({

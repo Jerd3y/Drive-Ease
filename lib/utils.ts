@@ -19,7 +19,7 @@ export const calculateCarRent = (cityMpg: number, year: number): number => {
   return Math.round(rentalRatePerDay);
 };
 
-export const generateCarImageUrl = (car: CarProps, angle?: string): string => {
+export const generateCarImageUrl = (car: Pick<CarProps, 'make' | 'model' | 'year'>, angle?: string): string => {
   const url = new URL("https://cdn.imagin.studio/getimage");
   const { make, year, model } = car;
 

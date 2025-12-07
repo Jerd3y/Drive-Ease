@@ -12,6 +12,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { IconPlus } from "@tabler/icons-react";
 
+export const dynamic = 'force-dynamic'
+
 const basePrisma = prisma as unknown as PrismaClient;
 
 export default async function CarsAdminPage() {

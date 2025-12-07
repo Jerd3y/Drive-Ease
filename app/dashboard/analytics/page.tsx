@@ -7,80 +7,96 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { AnalyticsCharts } from "@/components/dashboard/analytics-charts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+
+export const dynamic = 'force-dynamic'
 
 export default async function AnalyticsPage() {
   await requireAdmin();
 
-  // Get analytics data
-  const [
+  // 1. Total Revenue
+  // @ts-expect-error - Prisma Accelerate extension causes type conflicts
+  const totalRevenueResult = await prisma.booking.aggregate({
+    _sum: { totalPrice: true },
+    where: { status: { in: ["confirmed", "completed"] } },
+  });
+  const totalRevenue = totalRevenueResult._sum.totalPrice || 0;
+
+  // 2. Monthly Revenue
+  // @ts-expect-error - Prisma Accelerate extension causes type conflicts
+  const bookings = await prisma.booking.findMany({
+    where: {
+      status: { in: ["confirmed", "completed"] },
+      createdAt: {
+        gte: new Date(new Date().setMonth(new Date().getMonth() - 6)),
+      },
+    },
+    select: {
+      createdAt: true,
+      totalPrice: true,
+    },
+  });
+
+  const monthlyData: { [key: string]: number } = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  bookings.forEach((booking: any) => {
+    const month = new Date(booking.createdAt).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
+    monthlyData[month] = (monthlyData[month] || 0) + booking.totalPrice;
+  });
+  const monthlyRevenue = Object.entries(monthlyData).map(([month, revenue]) => ({
+    month,
+    revenue,
+  }));
+
+  // 3. Popular Cars
+  // @ts-expect-error - Prisma Accelerate extension causes type conflicts
+  const popularCarGroups = await prisma.booking.groupBy({
+    by: ["carId"],
+    _count: { carId: true },
+    orderBy: { _count: { carId: "desc" } },
+    take: 5,
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const carIds = popularCarGroups.map((g: any) => g.carId);
+  // @ts-expect-error - Prisma Accelerate extension causes type conflicts
+  const cars = await prisma.car.findMany({
+    where: { id: { in: carIds } },
+    select: { id: true, make: true, model: true, year: true },
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const popularCars = popularCarGroups.map((group: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const car = cars.find((c: any) => c.id === group.carId);
+    return {
+      car: car || { make: "Unknown", model: "Car", year: 0 },
+      count: group._count.carId,
+    };
+  });
+
+  // 4. Booking Trends
+  // @ts-expect-error - Prisma Accelerate extension causes type conflicts
+  const bookingTrendsData = await prisma.booking.groupBy({
+    by: ["status"],
+    _count: { status: true },
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bookingTrends = bookingTrendsData.map((t: any) => ({
+    status: t.status,
+    count: t._count.status,
+  }));
+
+  const analyticsData = {
     totalRevenue,
     monthlyRevenue,
     popularCars,
     bookingTrends,
-  ] = await Promise.all([
-    prisma.booking.aggregate({
-      _sum: { totalPrice: true },
-      where: { status: { in: ["confirmed", "completed"] } },
-    }),
-    prisma.booking.findMany({
-      where: {
-        status: { in: ["confirmed", "completed"] },
-        createdAt: {
-          gte: new Date(new Date().setMonth(new Date().getMonth() - 6)),
-        },
-      },
-      select: {
-        createdAt: true,
-        totalPrice: true,
-      },
-    }).then((bookings) => {
-      // Group by month
-      const monthlyData: { [key: string]: number } = {};
-      bookings.forEach((booking) => {
-        const month = new Date(booking.createdAt).toLocaleDateString("en-US", {
-          month: "short",
-          year: "numeric",
-        });
-        monthlyData[month] = (monthlyData[month] || 0) + booking.totalPrice;
-      });
-      return Object.entries(monthlyData).map(([month, revenue]) => ({
-        month,
-        revenue,
-      }));
-    }),
-    prisma.booking.groupBy({
-      by: ["carId"],
-      _count: { carId: true },
-      orderBy: { _count: { carId: "desc" } },
-      take: 10,
-    }).then(async (groups) => {
-      const carIds = groups.map((g) => g.carId);
-      const cars = await prisma.car.findMany({
-        where: { id: { in: carIds } },
-        select: { id: true, make: true, model: true, year: true },
-      });
-      return groups.map((group) => ({
-        car: cars.find((c) => c.id === group.carId)!,
-        count: group._count.carId,
-      }));
-    }),
-    prisma.booking.groupBy({
-      by: ["status"],
-      _count: { status: true },
-    }),
-  ]);
-
-  const analyticsData = {
-    totalRevenue: totalRevenue._sum.totalPrice || 0,
-    monthlyRevenue, // Already formatted as { month, revenue }[]
-    popularCars,
-    bookingTrends: bookingTrends.map((t) => ({
-      status: t.status,
-      count: t._count.status,
-    })),
   };
 
   return (
@@ -118,4 +134,3 @@ export default async function AnalyticsPage() {
     </SidebarProvider>
   );
 }
-

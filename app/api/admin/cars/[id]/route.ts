@@ -3,21 +3,27 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-utils";
 import { updateCarSchema } from "@/lib/schemas/admin";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
+
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
+    const { id } = await params;
     const body = await request.json();
     const validatedData = updateCarSchema.parse(body);
+    
 
-    const car = await prisma.car.findUnique({
-      where: { id: params.id },
+    // Check if car exists first
+    // @ts-expect-error - Prisma Accelerate extension causes type conflicts
+    const existingCar = await prisma.car.findUnique({
+      where: { id },
     });
 
-    if (!car) {
+    if (!existingCar) {
       return NextResponse.json(
         { error: "Car not found" },
         { status: 404 }
@@ -40,9 +46,9 @@ export async function PATCH(
       displacement?: number;
       drive?: string;
       transmission?: string;
-      description?: string;
-      location?: string;
-      images?: unknown;
+      description?: string | null;
+      location?: string | null;
+      images?: Prisma.InputJsonValue;
     } = {};
     if (validatedData.pricePerDay !== undefined) prismaData.pricePerDay = validatedData.pricePerDay;
     if (validatedData.cityMpg !== undefined) prismaData.cityMpg = validatedData.cityMpg;
@@ -58,12 +64,13 @@ export async function PATCH(
     if (validatedData.displacement !== undefined) prismaData.displacement = validatedData.displacement;
     if (validatedData.drive !== undefined) prismaData.drive = validatedData.drive;
     if (validatedData.transmission !== undefined) prismaData.transmission = validatedData.transmission;
-    if (validatedData.description !== undefined) prismaData.description = validatedData.description;
-    if (validatedData.location !== undefined) prismaData.location = validatedData.location;
-    if (validatedData.images !== undefined) prismaData.images = validatedData.images;
+    if (validatedData.description !== undefined) prismaData.description = validatedData.description ?? null;
+    if (validatedData.location !== undefined) prismaData.location = validatedData.location ?? null;
+    if (validatedData.images !== undefined) prismaData.images = validatedData.images as Prisma.InputJsonValue;
 
+    
     const updatedCar = await prisma.car.update({
-      where: { id: params.id },
+      where: { id },
       data: prismaData,
     });
 
@@ -71,7 +78,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request data", details: error.errors },
+        { error: "Invalid request data", details: error.issues },
         { status: 400 }
       );
     }
@@ -85,13 +92,15 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
+    const { id } = await params;
 
-    const car = await prisma.car.findUnique({
-      where: { id: params.id },
+
+    const car = await prisma.car.delete({
+      where: { id },
     });
 
     if (!car) {
@@ -100,10 +109,6 @@ export async function DELETE(
         { status: 404 }
       );
     }
-
-    await prisma.car.delete({
-      where: { id: params.id },
-    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

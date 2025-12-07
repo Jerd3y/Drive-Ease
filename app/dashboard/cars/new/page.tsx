@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/sidebar";
 import { CarForm } from "@/components/dashboard/car-form";
 
+export const dynamic = 'force-dynamic'
+
 export default async function AddCarPage() {
     await requireAdmin();
 

@@ -2,7 +2,6 @@ import React from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { HeroHeader } from '@/components/layout/header'
-import { CarSearch } from '@/components/cars/car-search'
 import { IconChevronRight, IconPlayerPlay, IconTrendingUp, IconStar } from '@tabler/icons-react'
 import Image from 'next/image'
 

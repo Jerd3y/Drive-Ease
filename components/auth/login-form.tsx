@@ -127,7 +127,7 @@ export function LoginForm({
 
       // Dispatch custom event to notify other components (like header) of auth change
       window.dispatchEvent(new Event('custom:auth-changed'))
-    } catch (error) {
+    } catch {
       form.setError("root", {
         type: "server",
         message: "An unexpected error occurred. Please try again.",

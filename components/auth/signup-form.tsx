@@ -145,8 +145,9 @@ export function SignupForm({
 
       // Redirect to login page after successful signup
       router.push("/login")
+      router.push("/login")
       router.refresh()
-    } catch (error) {
+    } catch {
       form.setError("root", {
         type: "server",
         message: "An unexpected error occurred. Please try again.",

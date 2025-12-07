@@ -79,7 +79,7 @@ export function BookingCompleteForm({ bookingId }: BookingCompleteFormProps) {
 
       toast.success("Booking information saved successfully!");
       setIsComplete(true);
-      
+
       // Redirect to bookings page after a short delay
       setTimeout(() => {
         router.push("/bookings");
@@ -251,7 +251,7 @@ export function BookingCompleteForm({ bookingId }: BookingCompleteFormProps) {
                     Emergency Contact Name
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder="Full Name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -314,6 +314,34 @@ export function BookingCompleteForm({ bookingId }: BookingCompleteFormProps) {
               </FormItem>
             )}
           />
+        </div>
+
+        <Separator />
+
+        {/* Payment Method Section */}
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-1">Payment Method</h3>
+            <p className="text-sm text-muted-foreground">
+              How you will pay for your rental
+            </p>
+          </div>
+
+          <div className="rounded-lg border-2 border-green-500/30 bg-green-50 dark:bg-green-950/20 p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-full bg-green-500/10">
+                <IconCheck className="size-5 text-green-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-green-700 dark:text-green-400">
+                  Payment: Face to Face
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Pay in cash or card upon vehicle pickup. No advance payment required.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Action Buttons */}

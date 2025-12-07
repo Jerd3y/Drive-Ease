@@ -8,9 +8,12 @@ import {
 } from "@/components/ui/sidebar";
 import { UsersTable } from "@/components/dashboard/users-table";
 
+export const dynamic = 'force-dynamic'
+
 export default async function UsersAdminPage() {
   await requireAdmin();
 
+  // @ts-expect-error - Prisma Accelerate extension causes type conflicts
   const users = await prisma.user.findMany({
     include: {
       _count: {

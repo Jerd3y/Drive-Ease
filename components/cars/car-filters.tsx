@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SlidersHorizontal, Car, Fuel, Settings, Calendar, RotateCcw, ChevronDown } from "lucide-react";
+import { SlidersHorizontal, Car, Fuel, Settings, Calendar, RotateCcw } from "lucide-react";
 import { IconCurrencyPeso } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {

@@ -9,39 +9,42 @@ import {
 import { BookingsTable } from "@/components/dashboard/bookings-table";
 import { BookingStats } from "@/components/dashboard/booking-stats";
 
+export const dynamic = 'force-dynamic'
+
 export default async function BookingsAdminPage() {
   await requireAdmin();
 
-  const [bookings, stats] = await Promise.all([
-    prisma.booking.findMany({
-      include: {
-        car: {
-          select: {
-            make: true,
-            model: true,
-            year: true,
-          },
-        },
-        user: {
-          select: {
-            name: true,
-            email: true,
-          },
+  // @ts-expect-error - Prisma Accelerate extension causes type conflicts
+  const bookings = await prisma.booking.findMany({
+    include: {
+      car: {
+        select: {
+          make: true,
+          model: true,
+          year: true,
         },
       },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.booking.groupBy({
-      by: ["status"],
-      _count: { status: true },
-    }),
-  ]);
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  
+  // @ts-expect-error - Prisma Accelerate extension causes type conflicts
+  const stats = await prisma.booking.groupBy({
+    by: ["status"],
+    _count: { status: true },
+  });
 
   const statsData = {
-    pending: stats.find((s) => s.status === "pending")?._count.status || 0,
-    confirmed: stats.find((s) => s.status === "confirmed")?._count.status || 0,
-    completed: stats.find((s) => s.status === "completed")?._count.status || 0,
-    cancelled: stats.find((s) => s.status === "cancelled")?._count.status || 0,
+    pending: stats.find((s: { status: string; _count: { status: number } }) => s.status === "pending")?._count.status || 0,
+    confirmed: stats.find((s: { status: string; _count: { status: number } }) => s.status === "confirmed")?._count.status || 0,
+    completed: stats.find((s: { status: string; _count: { status: number } }) => s.status === "completed")?._count.status || 0,
+    cancelled: stats.find((s: { status: string; _count: { status: number } }) => s.status === "cancelled")?._count.status || 0,
     total: bookings.length,
   };
 

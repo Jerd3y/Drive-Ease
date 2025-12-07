@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prismaBase } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-utils";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -7,13 +7,15 @@ import { existsSync } from "fs";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
 
-    const car = await prisma.car.findUnique({
-      where: { id: params.id },
+    const { id } = await params;
+
+    const car = await prismaBase.car.findUnique({
+      where: { id },
     });
 
     if (!car) {
@@ -76,13 +78,13 @@ export async function POST(
     const currentImages = Array.isArray(car.images)
       ? car.images
       : typeof car.images === "string"
-      ? [car.images]
-      : [];
+        ? [car.images]
+        : [];
 
     const updatedImages = [...currentImages, imageUrl];
 
-    const updatedCar = await prisma.car.update({
-      where: { id: params.id },
+    await prismaBase.car.update({
+      where: { id },
       data: {
         images: updatedImages,
       },
