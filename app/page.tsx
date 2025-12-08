@@ -8,8 +8,9 @@ export const dynamic = 'force-dynamic'
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+  const resolvedSearchParams = await searchParams;
   return (
     <main>
       <HeroSection />
@@ -19,7 +20,7 @@ export default async function Home({
         limit={12}
         showFilters={true}
         showSearch={true}
-        searchParams={searchParams}
+        searchParams={resolvedSearchParams}
         layout="carousel"
       />
       <Features />
